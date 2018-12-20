@@ -27,6 +27,7 @@ class Registration extends Component {
            console.log(createdUser);       })
            .catch(err=>{
                console.error(err);
+               this.setState({errors:this.state.errors.concat(err),loading:false})
            })
    }}
    isFormEmpty=({username,email,password,passwordConfirm})=>{
@@ -48,7 +49,7 @@ else{
    isFormValid=()=>{
        let errors=[];
        let error
-       if (this.isFormEmpty(this.state)){
+       if (!this.isFormEmpty(this.state)){
            error={
                message:"Fill in all fields"
            }
@@ -72,6 +73,10 @@ else{
        }
 
        }
+       handelInput=(errors,inputName)=>{
+           return errors.some(el=>el.message.toLowerCase().includes(inputName))?
+          'error':''
+       }
        
    
     render() {
@@ -87,6 +92,7 @@ else{
                    <Form size ='large' onSubmit={this.handelSubmit}>
                    <Segment stacked >
                    <Form.Input
+                   className={this.handelInput(errors,'username')}
                    fluid
                    name='username'
                    icon='user'
@@ -94,6 +100,7 @@ else{
                    placeholder='Username'
                    type='text' onChange={this.handelChange}/>
                    <Form.Input
+                    className={this.handelInput(errors,'email')}
                             fluid
                             name='email'
                             icon='mail'
@@ -101,6 +108,7 @@ else{
                             placeholder='Email'
                             type='mail' onChange={this.handelChange}/>
                       <Form.Input
+                       className={this.handelInput(errors,'password')}
                    fluid
                    name='password'
                    icon='lock'
@@ -108,6 +116,7 @@ else{
                    placeholder='Password'
                    type='password' onChange={this.handelChange}/>
                       <Form.Input
+                       className={this.handelInput(errors,'passwordConfirm')}
                    fluid
                    name='passwordConfirm'
                    icon='repeat'
