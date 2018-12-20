@@ -1,15 +1,24 @@
 import React, { Component } from 'react';
 import firebase from '../Firebase/firebase'
 import { Grid, Header,Message, Button,Icon,Form,Segment } from 'semantic-ui-react';
-import {NavLink} from 'react-router-dom'
+import {NavLink} from 'react-router-dom';
+import md5 from 'md5'
 class Registration extends Component {
     state={
         username:'',
         email:'',
         password:'',
         passwordConfirm:'',
-        errors:[]
+        errors:[],
+        loading:false,
+        usersRef:firebase.database().ref('users')
 
+   }
+   saveUser=createdUser=>{
+       return this.state.usersRef.child(createdUser.user.uid).set({
+           name: createdUser.user.displayName,
+           avatar: createdUser.user.photoURL
+       })
    }
    handelChange=(ev)=>{
        let name=ev.target.name;
@@ -24,7 +33,15 @@ class Registration extends Component {
        if(this.isFormValid()){
         firebase
        .auth().createUserWithEmailAndPassword(this.state.email,this.state.password).then(createdUser=>{
-           console.log(createdUser);       })
+           console.log(createdUser);      
+           createdUser.user.updateProfile({
+               displayName:this.state.username,
+               photoURL:`http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`
+           }) 
+        .then(()=>{
+            this.saveUser(createdUser).then(()=>console.log('user saved'))
+        })
+        })
            .catch(err=>{
                console.error(err);
                this.setState({errors:this.state.errors.concat(err),loading:false})
