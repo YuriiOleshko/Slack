@@ -42,13 +42,13 @@ signOut=()=>{
             </Header.Content>
 
             </Header>
-            </Grid.Row>
            
 <Header style={{padding :'0.25rem'}} as='h4'inverted>
 <Dropdown trigger={<span style={{marginLeft:'1rem'}}><Image src={this.props.current.photoURL} spaced='right' avatar/>
 {this.props.current.displayName}</span>}
 options={this.dropdownOption()}/>
  </Header>
+ </Grid.Row>
 </Grid.Column>
             </Grid>
         );
