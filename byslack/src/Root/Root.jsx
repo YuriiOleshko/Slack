@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {Switch, Route, withRouter} from 'react-router-dom';
 import firebase from '../Firebase/firebase';
-import  {setUser} from '../redux/action/actionTypes';
+import  {setUser,clearUser} from '../redux/action/actionTypes';
 import {connect} from 'react-redux'
 import App from '../App';
 import Login from '../Authorization/Login';
@@ -16,6 +16,10 @@ class Root extends Component {
                console.log(user);
                this.props.setUser(user)
                this.props.history.push('/');
+           }
+           else{
+               this.props.clearUser()
+               this.props.history.push('/login')
            }
        })
    }
@@ -40,6 +44,9 @@ function mapDispatchToProps(dispatch){
     return{
         setUser:function(user){
             dispatch(setUser(user))
+        },
+        clearUser:function(){
+            dispatch(clearUser())
         }
     }
 
