@@ -6,6 +6,7 @@ import {connect} from 'react-redux'
 import App from '../App';
 import Login from '../Authorization/Login';
 import Registration from '../Authorization/Registration';
+import Spinner from '../Spinner/Spinner';
 
 class Root extends Component {
 
@@ -20,7 +21,7 @@ class Root extends Component {
    }
 
    render() {
-       return (
+       return this.props.isLoading?<Spinner/> :(
            <Switch>
                <Route exact path='/' component={App}/>
                <Route path='/login' component={Login}/>
