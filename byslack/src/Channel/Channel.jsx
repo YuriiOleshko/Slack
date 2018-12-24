@@ -3,6 +3,7 @@ import { Menu, Icon, Modal, Form, Input, Button } from 'semantic-ui-react';
 import firebase from '../Firebase/firebase';
 import {connect} from 'react-redux';
 import { stat } from 'fs';
+import {setCurrentChannels} from '../redux/action/currentAction'
 
 class Channels extends Component {
 
@@ -12,6 +13,8 @@ class Channels extends Component {
         channelName: '',
         channelDetails: '',
         channelsRef: firebase.database().ref('channels'),
+        firstLoaded:true,
+        ActiveChannel:''
     }
 componentDidMount(){
     this.addListeners()
@@ -24,7 +27,16 @@ componentDidMount(){
             console.log(loadedChannels);
             this.setState({
                 channels:loadedChannels
-            })
+            },()=>{this.loadFirstChannels()})
+        })
+    }
+    loadFirstChannels=()=>{
+        if (this.state.firstLoaded && this.state.channels.length>0){
+            this.props.currentFetch(this.state.channels[0]);
+            this.showActiveCHanel(this.state.channels[0])
+        }
+        this.setState({
+                firstLoaded:false
         })
     }
     openModal = () => {
@@ -44,7 +56,11 @@ componentDidMount(){
             [e.target.name]: e.target.value,
         })
     }
-
+    showActiveCHanel=(date)=>{
+    this.setState({
+        ActiveChannel:date.id
+    })
+    }
     isFormValid = ({channelName, channelDetails}) => channelName && channelDetails;
 
     handleSubmit = (e) => {
@@ -95,9 +111,13 @@ componentDidMount(){
             {channels.length > 0 && channels.map(channel=>(
                 <Menu.Item 
                 key={channel.id}
+                onClick={(()=>{this.props.currentFetch(channel)
+                this.showActiveCHanel(channel)})}
+                active={channel.id===this.state.ActiveChannel}
                 name={channel.name}
                 style={{opacity:0.7}}
 >
+
 #{channel.name}</Menu.Item>
             ))}
             </Menu.Menu>
@@ -140,5 +160,11 @@ componentDidMount(){
 const mapStateToProps = state => ({
     user: state.user.currentUser,
 })
-
-export default connect(mapStateToProps)(Channels);
+function mapDispatchToProps(dispatch){
+    return{
+        currentFetch:function(data){
+            dispatch(setCurrentChannels(data))
+        }
+    }
+}
+export default connect(mapStateToProps,mapDispatchToProps)(Channels);
