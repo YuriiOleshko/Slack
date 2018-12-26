@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import firebase from '../firebase';
+import md5 from 'md5';
 import { NavLink } from 'react-router-dom';
 import {
     Grid,
@@ -11,12 +12,15 @@ import {
     Icon
 } from 'semantic-ui-react';
 
-class Login extends Component {
+class Register extends Component {
 
     state = {
+        username: '',
         email: '',
         password: '',
+        passwordConfirm: '',
         errors: [],
+        usersRef: firebase.database().ref('users'),
     }
 
     handlerChange = (evt) => {
@@ -27,9 +31,25 @@ class Login extends Component {
         }) 
     }
 
-    isFormEmpty = ({email, password}) => {
-        return !email.length > 0 || !password.length > 0
+    isFormEmpty = ({username, email, password, passwordConfirm}) => {
+        return !username.length > 0 || !email.length > 0 || !password.length > 0 || !passwordConfirm.length
     }
+    //так может быть: 
+    // if (username.length > 0 && email.length > 0 && password.length > 0 && passwordConfirm.length > 0) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
+
+    isPasswordValid = ({password, passwordConfirm}) => {
+        return password === passwordConfirm
+    }
+    //так может быть: 
+    // if (password === passwordConfirm) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
 
     isFormValid = () => {
         let errors = [];
@@ -42,6 +62,14 @@ class Login extends Component {
                 errors: errors.concat(error)
             })
             return false;
+        } else if (!this.isPasswordValid(this.state)) {
+            error = {
+                message: 'Password is invalid'
+            };
+            this.setState({
+                errors: errors.concat(error)
+            })
+            return false
         } else {
             this.setState({
                 errors: []
@@ -50,14 +78,32 @@ class Login extends Component {
         }
     }
 
+    saveUser = createdUser => {
+        return this.state.usersRef.child(createdUser.user.uid).set({
+            name: createdUser.user.displayName,
+            avatar: createdUser.user.photoURL,
+        })
+    }
+
     handleSubmit = (evt) => {
         evt.preventDefault();
         if (this.isFormValid()) {
             firebase
             .auth()
-            .signInWithEmailAndPassword(this.state.email, this.state.password)
-            .then(signedUser => {
-                console.log(signedUser);
+            .createUserWithEmailAndPassword(this.state.email, this.state.password)
+            .then(createdUser => {
+                console.log(createdUser);
+                createdUser.user.updateProfile({
+                    displayName: this.state.username,
+                    photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`,
+                })
+                .then(() => {
+                    this.saveUser(createdUser).then(() => console.log('user saved'))
+                })
+                .catch(err => {
+                    console.error(err);
+                    this.setState({ errors: this.state.errors.concat(err)})
+            })
             })
             .catch(err => {
                 console.error(err);
@@ -69,7 +115,7 @@ class Login extends Component {
     handleInput = (errors, inputName) => {
         return errors.some(el => el.message.toLowerCase().includes(inputName)) ? 'error' : '';
     }
-
+   
     render() {
         const { errors } = this.state;
         return (
@@ -78,12 +124,22 @@ class Login extends Component {
                     maxWidth: 450
                 }}>
                     <Header as='h2' icon color='green' textAlign='center'>
-                        <Icon name='user circle' color='green'/>
-                        Login to Slack clone
+                        <Icon name='comment alternate' color='green'/>
+                        Register for Slack Clone
                     </Header>
                     <Form size='large' onSubmit={this.handleSubmit}>
                         <Segment stacked>
-                            
+                            <Form.Input
+                            fluid
+                            name='username'
+                            icon='user'
+                            iconPosition='left'
+                            placeholder='Username'
+                            type='text'
+                            onChange={this.handlerChange}
+                            value={this.state.username}
+                            className={this.handleInput(errors, 'username')}/>
+
                             <Form.Input
                             fluid
                             name='email'
@@ -106,8 +162,19 @@ class Login extends Component {
                             value={this.state.password}
                             className={this.handleInput(errors, 'password')}/>
 
+                            <Form.Input
+                            fluid
+                            name='passwordConfirm'
+                            icon='repeat'
+                            iconPosition='left'
+                            placeholder='Password Confirm'
+                            type='password'
+                            onChange={this.handlerChange}
+                            value={this.state.passwordConfirm}
+                            className={this.handleInput(errors, 'passwordConfirm')}/>
+
                             <Button color='green' fluid size='large'>
-                                Login
+                                Submit
                             </Button>
 
                         </Segment>                 
@@ -120,8 +187,8 @@ class Login extends Component {
                     )}
 
                         <Message>
-                            Don't have an account?
-                            <NavLink to='/registration'> Registration</NavLink>
+                            Already a user?
+                            <NavLink to='/login'> Login</NavLink>
                         </Message>      
                 </Grid.Column>        
             </Grid>
@@ -129,4 +196,4 @@ class Login extends Component {
     }
 }
 
-export default Login;
+export default Register;

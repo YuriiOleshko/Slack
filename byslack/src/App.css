@@ -1,5 +1,38 @@
-.app{
-  height: 100vh;
-  padding: 1rem;
-  background: white;
+html, body, .app {
+    height: 100vh;
+    padding: 1rem;
+    background: #eee;
 }
+
+.messages {
+    height: 380px;
+    overflow-y: scroll;
+    min-width: 100%;
+}
+
+.message__self {
+    border-left: 2px solid orange;
+    padding-left: 0.5rem;
+}
+
+.message__image {
+    padding: 1rem;
+}
+.color__container {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    width: 35px;
+    border-radius: 3px;
+  }
+  
+  .color__square {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .color__overlay {
+    width: 85px;
+    height: 35px;
+    transform: rotate(225deg);
+  }

@@ -1,44 +1,62 @@
 import React, { Component } from 'react';
 import { Menu, Icon, Modal, Form, Input, Button } from 'semantic-ui-react';
-import firebase from '../Firebase/firebase';
+import firebase from '../firebase';
 import {connect} from 'react-redux';
-import { stat } from 'fs';
-import {setCurrentChannels} from '../redux/action/currentAction'
+import {setCurrentChannel} from '../redux/actions/setCurrentChannelAction';
+// import { stat } from 'fs';
 
 class Channels extends Component {
 
     state= {
+        activeChannel: '',
         channels : [],
         modal: false,
         channelName: '',
         channelDetails: '',
         channelsRef: firebase.database().ref('channels'),
-        firstLoaded:true,
-        ActiveChannel:''
+        firstLoad: true,
     }
-componentDidMount(){
-    this.addListeners()
-}
 
-    addListeners =()=>{
-        let loadedChannels=[];
-        this.state.channelsRef.on('child_added',snap=>{
+    componentDidMount () {
+        this.addListener();
+    }
+
+    componentWillUnmount () {
+        this.removeListener();
+    }
+
+    removeListener = () => {
+        this.state.channelsRef.off();
+    }
+
+    addListener = () => {
+        let loadedChannels = [];
+        this.state.channelsRef.on('child_added', snap => {
             loadedChannels.push(snap.val())
-            console.log(loadedChannels);
+            // console.log(loadedChannels);
             this.setState({
-                channels:loadedChannels
-            },()=>{this.loadFirstChannels()})
+                channels: loadedChannels,
+            }, () => this.loadFirstChannel()
+            )
         })
     }
-    loadFirstChannels=()=>{
-        if (this.state.firstLoaded && this.state.channels.length>0){
-            this.props.currentFetch(this.state.channels[0]);
-            this.showActiveCHanel(this.state.channels[0])
+
+    showActiveChannel = (channel) => {
+        this.setState({
+            activeChannel: channel.id,
+        })
+    }
+
+    loadFirstChannel = () => {
+        if (this.state.firstLoad && this.state.channels.length > 0) {
+            this.props.setCurrentChannel(this.state.channels[0]);
+            this.showActiveChannel(this.state.channels[0]);
         }
         this.setState({
-                firstLoaded:false
+            firstLoad: false,
         })
     }
+
     openModal = () => {
         this.setState({
             modal: true,
@@ -56,11 +74,7 @@ componentDidMount(){
             [e.target.name]: e.target.value,
         })
     }
-    showActiveCHanel=(date)=>{
-    this.setState({
-        ActiveChannel:date.id
-    })
-    }
+
     isFormValid = ({channelName, channelDetails}) => channelName && channelDetails;
 
     handleSubmit = (e) => {
@@ -98,6 +112,11 @@ componentDidMount(){
         .catch(err => console.log(err))
     }
 
+    onClickChannelFunc = (channel) => {
+        this.props.setCurrentChannel(channel);
+        this.showActiveChannel(channel);
+    }
+
     render() {
         const {channels, modal} = this.state;
         return (
@@ -108,18 +127,17 @@ componentDidMount(){
                     <Icon name='exchange'/> CHANNELS
                 </span> ({channels.length})<Icon name='add' onClick={this.openModal}/>
             </Menu.Item>
-            {channels.length > 0 && channels.map(channel=>(
-                <Menu.Item 
-                key={channel.id}
-                onClick={(()=>{this.props.currentFetch(channel)
-                this.showActiveCHanel(channel)})}
-                active={channel.id===this.state.ActiveChannel}
-                name={channel.name}
-                style={{opacity:0.7}}
->
-
-#{channel.name}</Menu.Item>
-            ))}
+            {channels.length > 0 && channels.map(channel => {
+                return <Menu.Item
+                    key={channel.id}
+                    name={channel.name}
+                    style={{opacity:0.7}}
+                    onClick={() => this.onClickChannelFunc(channel)}
+                    active = {channel.id === this.state.activeChannel}
+                    >
+                # {channel.name}    
+                </Menu.Item>
+            })}
             </Menu.Menu>
             <Modal open={modal} onClose={this.closeModal} style={{background:'#fff'}}>
             <Modal.Header>Add a Channel</Modal.Header>
@@ -160,11 +178,13 @@ componentDidMount(){
 const mapStateToProps = state => ({
     user: state.user.currentUser,
 })
-function mapDispatchToProps(dispatch){
-    return{
-        currentFetch:function(data){
-            dispatch(setCurrentChannels(data))
+
+const mapDispatchToProps = dispatch => {
+    return {
+        setCurrentChannel: function (channel) {
+            dispatch(setCurrentChannel(channel))
         }
     }
 }
-export default connect(mapStateToProps,mapDispatchToProps)(Channels);
+
+export default connect(mapStateToProps, mapDispatchToProps)(Channels);
